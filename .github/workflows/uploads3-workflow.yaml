@@ -1,0 +1,38 @@
+# This is a worflow.yaml file to upload the website repository to the web hosting s3 bucket
+#==========================================================================================
+# Steps:
+#=======
+# Upload contents to s3 bucket
+# Notify slack channel 
+#------------------------------------------------------------------
+
+
+
+name: Upload to S3
+
+on: [push]
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: shallwefootball/s3-upload-action@master
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          source_dir: 'website-github-repository-name'
+    steps:
+      - uses: ravsamhq/notify-slack-action@v1
+        if: always()
+        with:
+          status: ${{ job.status }} # required
+          notification_title: 'New Github Action "Upload to S3" Run'
+          message_format: '{emoji} *{workflow}* {status_message} in <{repo_url}|{repo}>'
+          footer: 'Linked Repo <{repo_url}|{repo}>'
+          notify_when: 'success,failure,warnings'        
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # required
+
+#-------------------------------------------------------------------------------------------------------------
